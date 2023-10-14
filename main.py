@@ -34,6 +34,7 @@ def main():
 def generate_repeatedly(dest, title, concept_description, characters, last_sentence):
     text = last_sentence
     while count_words(text) < 100_000:
+        print("-" * 80)
         print("Word count:", count_words(text))
         new_text = generate_more(
             title,
@@ -41,6 +42,7 @@ def generate_repeatedly(dest, title, concept_description, characters, last_sente
             characters,
             final_sentence(text)
         )
+        new_text = trim_text(new_text)
         print(new_text)
         text += "\n"
         text += new_text
@@ -52,6 +54,14 @@ def generate_repeatedly(dest, title, concept_description, characters, last_sente
 def count_words(text):
     """Return the number of words in the text."""
     return len(text.split())
+
+
+def trim_text(text):
+    """Remove everything after the 5th final newline character."""
+    lines = text.split('\n')
+    if len(lines) <= 5:
+        return text
+    return '\n'.join(lines[:-5])
 
 
 def save_concept(concept):
@@ -72,31 +82,41 @@ def save_concept(concept):
 
 
 def generate_more(title, concept, characters, last_sentence):
-    response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=[
-            {
-                "role": "system",
-                "content": f"""
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {
+                    "role": "system",
+                    "content": f"""
 Continue writing a novel.
 The User will give you the previous sentence in the novel.
 DO proceed immediately with the text of the novel.
 Do NOT add any additional commentary before or after the text.
 Do NOT write any sentences longer than 10 words.
 Do NOT use adjectives or adverbs.
-DO include dialog.
-Concept: {concept}
-Characters: {characters} """,
-            },
-            {"role": "user", "content": last_sentence},
-        ],
-        temperature=1,
-        max_tokens=2000,
-        top_p=1,
-        frequency_penalty=0,
-        presence_penalty=0,
-    )
-    return response.choices[0].message.content
+DO include dialog."""
+                },
+                {"role": "user", "content": f"""
+# Concept
+{concept}
+# Characters
+{characters} """
+                },
+                {"role": "user", "content": last_sentence},
+            ],
+            temperature=1,
+            max_tokens=3000,
+            top_p=1,
+            frequency_penalty=0,
+            presence_penalty=2,
+        )
+        return response.choices[0].message.content
+    except openai.error.InvalidRequestError as e:
+        if "maximum context length" in str(e):
+            return generate_more(title, concept, characters, last_sentence[:1000])
+        else:
+            raise e
 
 
 def final_sentence(text):
