@@ -20,24 +20,58 @@ def main():
     concept = generate_concept()
     print(concept)
     save_concept(concept)
+    tree = etree.fromstring(concept)
+    title = tree.xpath(".//title")[0].text.strip()
+    concept_description = tree.xpath(".//acceptedIdea")[0].text.strip()
+    characters = tree.xpath(".//characters")[0].text.strip()
+    last_sentence = tree.xpath(".//firstSentence")[0].text.strip()
+    text = generate_more(title, concept_description, characters, last_sentence)
+    print("GENERATING MORE")
+    pprint(text)
 
 
 def save_concept(concept):
     """Save the concept to a file."""
     tree = etree.fromstring(concept)
-    title_tag = tree.xpath('.//title')[0]
+    title_tag = tree.xpath(".//title")[0]
     assert title_tag is not None
     title_text = title_tag.text.strip()
-    # make title text lowercase, replace whitespace with _
-    title_text = title_text.lower().replace(' ', '_')
-    # prepend timestamp ISO
-    title_text = f'{datetime.now().isoformat()}_{title_text}'
+    title_text = title_text.lower().replace(" ", "_")
+    title_text = f"{datetime.now().isoformat()}_{title_text}"
 
-    output_dir = f'output/{title_text}'
+    output_dir = f"output/{title_text}"
     os.makedirs(output_dir, exist_ok=True)
-    file_path = os.path.join(output_dir, 'concept.xml')
-    with open(file_path, 'w') as file:
+    file_path = os.path.join(output_dir, "concept.xml")
+    with open(file_path, "w") as file:
         file.write(concept)
+
+
+def generate_more(title, concept, characters, last_sentence):
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {
+                "role": "system",
+                "content": f"""
+Continue writing a novel.
+The User will give you the previous sentence in the novel.
+DO proceed immediately with the text of the novel.
+Do NOT add any additional commentary before or after the text.
+Do NOT write any sentences longer than 10 words.
+Do NOT use adjectives or adverbs.
+DO include dialog.
+Concept: {concept}
+Characters: {characters} """,
+            },
+            {"role": "user", "content": last_sentence},
+        ],
+        temperature=1,
+        max_tokens=2000,
+        top_p=1,
+        frequency_penalty=0,
+        presence_penalty=0,
+    )
+    return response.choices[0].message.content
 
 
 def generate_concept():
@@ -51,16 +85,19 @@ def generate_concept():
 Generate a concept for a full-length novel.
 DO enocde your entire response in XML.
 DO make the root tag <novelConcept>.
-DO include <rejectedIdeas>, <acceptedIdea>, <title>, <cover>, <firstSentence>
-    tags within the <novelConcept> tag.
+DO include <rejectedIdeas>, <acceptedIdea>, <title>,
+    <cover>, <characters>, <firstSentence> tags
+    within the root <novelConcept> tag.
 DO make the <rejectedIdeas> tag a short brainstorm of three dramatically
     different directions.
 DO make the <acceptedIdea> tag a fourth idea that's better
     than the rejected ones.
 DO make the <title> the title of the book.
-DO make the <cover> tag a Midjourney prompt for generating the cover art.
+DO make the <cover> tag a description of the cover art.
+DO make the <characters> tag a list of the main characters
+    and their motivations.
 DO make the <firstSentence> tag the first sentence of the book.
-DO make the genre dramatic literary fiction appropriate for a Pulitzer."""
+DO make the genre dramatic literary fiction appropriate for a Pulitzer.""",
             },
             {"role": "user", "content": ""},
         ],
