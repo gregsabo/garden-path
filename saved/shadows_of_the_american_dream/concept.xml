@@ -1,0 +1,39 @@
+<novelConcept>
+  <rejectedIdeas>
+    <idea>
+      A post-apocalyptic drama where survivors navigate a world ravaged by an unknown global climate disaster. 
+    </idea>
+    <idea>
+      A historical novel set in the French Revolution with a central character who alters the course of history through unprecedented acts of courage.
+    </idea>
+    <idea>
+      A contemporary legal drama circling the life of a prodigious lawyer gone rogue in his quest for justice after losing a controversial case.
+    </idea>
+  </rejectedIdeas>
+  <acceptedIdea>
+    A deeply moving, character-driven novel about an immigrant family's struggle for the American Dream during the Great Depression and their triumphs and trials in the face of adversity.
+  </acceptedIdea>
+  <title>
+    Shadow of the American Dream
+  </title>
+  <cover>
+    A silhouette of a family, hand in hand, standing against a backdrop of a dilapidated house, with an imposing skyscraper under construction soaring in the distance. The color palette is stark, using deep blacks and grays, with a single streak of golden light emanating from the horizon to represent hope.
+  </cover>
+  <characters>
+    <character>
+      <name>Alessandro Russo</name>
+      <description>A wiry Italian immigrant and father who is constantly torn between his desire to provide for his family and the ruthless demands of the city.</description>
+    </character>
+    <character>
+      <name>Maria Russo</name>
+      <description>Alessandro's wife, a resilient woman who keeps the family together despite the hardships, never wavering in her faith in their shared dream.</description>
+    </character>
+    <character>
+      <name>Luca Russo</name>
+      <description>Their teenage son who struggles with his identity as a first-generation American and the burden of their dreams pinned on him.</description>
+    </character>
+  </characters>
+  <firstSentence>
+    In the year 1929, Alessandro Russo, with his wife Maria clinging tightly to his arm, stepped off the boat onto the foreign soil that spelled a new life, a new dream, and a new struggle.
+  </firstSentence>
+</novelConcept>

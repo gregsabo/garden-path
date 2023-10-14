@@ -23,14 +23,17 @@ def main():
     tree = etree.fromstring(concept)
     title = tree.xpath(".//title")[0].text.strip()
     concept_description = tree.xpath(".//acceptedIdea")[0].text.strip()
-    characters = tree.xpath(".//characters")[0].text.strip()
+    characters = ""
+    for d in tree.xpath(".//characters")[0].iterdescendants():
+        if d.text:
+            characters += d.text.strip()
     last_sentence = tree.xpath(".//firstSentence")[0].text.strip()
     generate_repeatedly(dest, title, concept_description, characters, last_sentence)
 
 
 def generate_repeatedly(dest, title, concept_description, characters, last_sentence):
     text = last_sentence
-    while count_words(text) < 5_000:
+    while count_words(text) < 100_000:
         print("Word count:", count_words(text))
         new_text = generate_more(
             title,
