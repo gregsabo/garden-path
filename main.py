@@ -103,7 +103,8 @@ def final_sentence(text):
         last_sentence = sentences.pop().strip()
         if last_sentence:
             return last_sentence + '.'
-    raise ValueError("No valid sentence found.")
+    print("Warning, no final sentence found. Returning last 500 chars instead.")
+    return text[-500:]
 
 
 def generate_concept():
