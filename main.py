@@ -98,7 +98,12 @@ Characters: {characters} """,
 
 def final_sentence(text):
     """Return the final sentence of the text."""
-    return text[-1000:]
+    sentences = text.strip().split('. ')
+    while sentences:
+        last_sentence = sentences.pop().strip()
+        if last_sentence:
+            return last_sentence + '.'
+    raise ValueError("No valid sentence found.")
 
 
 def generate_concept():
