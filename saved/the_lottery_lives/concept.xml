@@ -1,0 +1,25 @@
+<novelConcept>
+    <rejectedIdeas>
+        <idea>A dystopian future where animals are the dominant species and humans are kept as pets</idea>
+        <idea>A romance between a human and an alien during an extraterrestrial invasion</idea>
+        <idea>A thriller about an innocent man who is framed for a crime and must prove his innocence before his execution</idea>
+    </rejectedIdeas>
+    <acceptedIdea>
+        The story traces the fractured lives of the residents in a small town after they are included in a nationwide lottery, causing old feuds to resurface, relationships to fracture, and secrets to be unearthed.
+    </acceptedIdea>
+    <title>
+        The Lottery Lives
+    </title>
+    <cover>
+        A picturesque, small-town landscape set against a vibrant sunset. The serene beauty is abruptly interrupted by a lottery ticket superimposed over the image, the edges of it burning.
+    </cover>
+    <characters>
+        <character name = "Joan"> A retired teacher who always projected an image of perfect calm and serenity, her true embittered nature surfaces when the lottery tickets come into play.</character>
+        <character name = "Gerald"> Joan's husband, a gone-soft former athlete who has a secret affair and is burdened with guilt.</character>
+        <character name = "Thomas"> The town's mayor, a once-respected man, finding his decisions questioned as tensions rise after the lottery.  </character>
+        <character name = "Maggie"> Thomas's wife, who bears a long-standing grudge against Joan; Maggie is the town's postmistress and discovers a long-kept secret.</character>
+    </characters>
+    <firstSentence>
+        On an unremarkable Tuesday, under the untroubled azure sky, a single piece of paper descended upon the local post-office of the tranquil town, its importance unbeknownst to all.
+    </firstSentence>
+</novelConcept>
