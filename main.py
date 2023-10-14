@@ -19,15 +19,36 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 def main():
     concept = generate_concept()
     print(concept)
-    save_concept(concept)
+    dest = save_concept(concept)
     tree = etree.fromstring(concept)
     title = tree.xpath(".//title")[0].text.strip()
     concept_description = tree.xpath(".//acceptedIdea")[0].text.strip()
     characters = tree.xpath(".//characters")[0].text.strip()
     last_sentence = tree.xpath(".//firstSentence")[0].text.strip()
-    text = generate_more(title, concept_description, characters, last_sentence)
-    print("GENERATING MORE")
-    pprint(text)
+    generate_repeatedly(dest, title, concept_description, characters, last_sentence)
+
+
+def generate_repeatedly(dest, title, concept_description, characters, last_sentence):
+    text = last_sentence
+    while count_words(text) < 5_000:
+        print("Word count:", count_words(text))
+        new_text = generate_more(
+            title,
+            concept_description,
+            characters,
+            final_sentence(text)
+        )
+        print(new_text)
+        text += "\n"
+        text += new_text
+        file_path = os.path.join(dest, "novel.txt")
+        with open(file_path, "w") as file:
+            file.write(text)
+
+
+def count_words(text):
+    """Return the number of words in the text."""
+    return len(text.split())
 
 
 def save_concept(concept):
@@ -44,6 +65,7 @@ def save_concept(concept):
     file_path = os.path.join(output_dir, "concept.xml")
     with open(file_path, "w") as file:
         file.write(concept)
+    return output_dir
 
 
 def generate_more(title, concept, characters, last_sentence):
@@ -72,6 +94,11 @@ Characters: {characters} """,
         presence_penalty=0,
     )
     return response.choices[0].message.content
+
+
+def final_sentence(text):
+    """Return the final sentence of the text."""
+    return text[-1000:]
 
 
 def generate_concept():
