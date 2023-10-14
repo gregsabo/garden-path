@@ -1,0 +1,38 @@
+<novelConcept>
+  <rejectedIdeas>
+    <idea>A group of high school friends reunite after years apart, only to find they have been selected to compete in a sinister game.</idea>
+    <idea>A time-travelling academic tries to prevent historical atrocities but repeatedly fails due to the constraints of time's law.</idea>
+    <idea>An alien race descends upon Earth offering advanced technology but with the hidden intent to control humanity's evolution.</idea>
+  </rejectedIdeas>
+
+  <acceptedIdea>
+    A celebrated novelist battles dementia and copes with his fading memory by burying himself within the world of his unfinished novel, blurring the line between fiction and reality.
+  </acceptedIdea>
+
+  <title>
+    Echoes Beyond the Ink
+  </title>
+
+  <cover>
+    A silhouette of an elderly man hunched over a typewriter. His figure blends into a swirl of ink that morphs into an imagined landscape, representing the world of his novel. 
+  </cover>
+
+  <characters>
+    <character>
+      <name>Howard Finley</name>
+      <motivation>Finish his novel and find peace within the chaos of his fading memory.</motivation>
+    </character>
+    <character>
+      <name>Emma Finley</name>
+      <motivation>Support her father through his dementia and preserve his remnant memories.</motivation>
+    </character>
+    <character>
+      <name>Oliver Blackwood</name>
+      <motivation>Character from Howard's novel, embarks on a grand quest that parallels Howard's fight against his own mind.</motivation>
+    </character>
+  </characters>
+
+  <firstSentence>
+     "Howard Finley, with the weight of his age pressing him into his chair, stared at the blank page, each unfinished sentence etched in the back of his mind like an echo drifting further away."
+  </firstSentence>
+</novelConcept>
