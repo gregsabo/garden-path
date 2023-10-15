@@ -7,6 +7,7 @@ with the last sentence of the previous paragraph.
 """
 import os
 from datetime import datetime
+import argparse
 from pprint import pprint
 from dotenv import load_dotenv
 import openai
@@ -16,19 +17,48 @@ load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 
-def main():
-    concept = generate_concept()
-    print(concept)
-    dest = save_concept(concept)
+def main(resume_path = None):
+    if resume_path:
+        dest, title, concept_description, characters, last_sentence = load_existing(resume_path)
+    else:
+        concept = generate_concept()
+        dest, title, concept_description, characters, last_sentence = parse_and_save(concept)
+    generate_repeatedly(dest, title, concept_description, characters, last_sentence)
+
+
+def load_existing(path):
+    with open(os.path.join(path, "concept.xml"), "r") as file:
+        concept = file.read()
+
     tree = etree.fromstring(concept)
     title = tree.xpath(".//title")[0].text.strip()
     concept_description = tree.xpath(".//acceptedIdea")[0].text.strip()
+
     characters = ""
     for d in tree.xpath(".//characters")[0].iterdescendants():
         if d.text:
             characters += d.text.strip()
+
+    with open(os.path.join(path, "novel.txt"), "r") as file:
+        text = file.read()
+
+    return path, title, concept_description, characters, text
+
+
+def parse_and_save(concept):
+    dest = save_concept(concept)
+    tree = etree.fromstring(concept)
+    title = tree.xpath(".//title")[0].text.strip()
+    concept_description = tree.xpath(".//acceptedIdea")[0].text.strip()
+
+    characters = ""
+    for d in tree.xpath(".//characters")[0].iterdescendants():
+        if d.text:
+            characters += d.text.strip()
+
     last_sentence = tree.xpath(".//firstSentence")[0].text.strip()
-    generate_repeatedly(dest, title, concept_description, characters, last_sentence)
+
+    return dest, title, concept_description, characters, last_sentence
 
 
 def generate_repeatedly(dest, title, concept_description, characters, last_sentence):
@@ -49,6 +79,20 @@ def generate_repeatedly(dest, title, concept_description, characters, last_sente
         file_path = os.path.join(dest, "novel.txt")
         with open(file_path, "w") as file:
             file.write(text)
+    new_text = generate_ending(
+        title,
+        concept_description,
+        characters,
+        final_sentence(text)
+    )
+    print("Generated ending:")
+    print(new_text)
+    text += "\n"
+    text += new_text
+    file_path = os.path.join(dest, "novel.txt")
+    with open(file_path, "w") as file:
+        file.write(text)
+    print("DONE!")
 
 
 def count_words(text):
@@ -96,6 +140,42 @@ Do NOT add any additional commentary before or after the text.
 Do NOT write any sentences longer than 10 words.
 Do NOT use adjectives or adverbs.
 DO include dialog."""
+                },
+                {"role": "user", "content": f"""
+# Concept
+{concept}
+# Characters
+{characters} """
+                },
+                {"role": "user", "content": last_sentence},
+            ],
+            temperature=1,
+            max_tokens=3000,
+            top_p=1,
+            frequency_penalty=0,
+            presence_penalty=2,
+        )
+        return response.choices[0].message.content
+    except openai.error.InvalidRequestError as e:
+        if "maximum context length" in str(e):
+            return generate_more(title, concept, characters, last_sentence[:1000])
+        else:
+            raise e
+
+def generate_ending(title, concept, characters, last_sentence):
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {
+                    "role": "system",
+                    "content": f"""
+Finish writing a novel.
+The User will give you the previous sentence in the novel.
+DO proceed immediately with the text of the novel.
+Do NOT add any additional commentary before or after the text.
+Wrap up the story in a satisfying way.
+"""
                 },
                 {"role": "user", "content": f"""
 # Concept
@@ -166,5 +246,10 @@ DO make the genre dramatic literary fiction appropriate for a Pulitzer.""",
     return response.choices[0].message.content
 
 
+
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description='Generate or resume a novel.')
+    parser.add_argument('--resume_path', type=str, help='Path to directory of existing concept and novel to resume')
+
+    args = parser.parse_args()
+    main(args.resume_path)
