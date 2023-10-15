@@ -1,5 +1,6 @@
 import os
 from dotenv import load_dotenv
+import lxml.etree as etree
 import openai
 
 load_dotenv()
@@ -38,4 +39,4 @@ def gpt4(system_prompt, user_prompt=None):
     )
     text = response.choices[0].message.content
     print(text)
-    return text
+    return etree.fromstring(text, etree.XMLParser(remove_blank_text=True))

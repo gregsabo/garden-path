@@ -97,8 +97,7 @@ The committee HATES cliches."""
 
 
 def generate_concept():
-    text = gpt4(generate_concept_prompt)
-    tree = etree.fromstring(text)
+    tree = gpt4(generate_concept_prompt)
     last_idea = tree.xpath(".//idea[last()]")[0]
     return last_idea.xpath(".//title")[0], last_idea.xpath(".//summary")[0]
 

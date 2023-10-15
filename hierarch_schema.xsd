@@ -3,36 +3,36 @@
   <xsd:element name="novel">
     <xsd:complexType>
       <xsd:sequence>
-        <xsd:element name="timestamp" type="xsd:string" minOccurs="0"/>
-        <xsd:element name="title" type="xsd:string" minOccurs="0"/>
-        <xsd:element name="summary" type="xsd:string" minOccurs="0"/>
+        <xsd:element name="timestamp" type="xsd:string" minOccurs="0" />
+        <xsd:element name="title" type="xsd:string" minOccurs="0" />
+        <xsd:element name="summary" type="xsd:string" minOccurs="0" />
         <xsd:element name="characters" minOccurs="0">
           <xsd:complexType>
             <xsd:sequence>
               <xsd:element name="character" maxOccurs="unbounded">
                 <xsd:complexType>
                   <xsd:sequence>
-                    <xsd:element name="name" type="xsd:string"/>
-                    <xsd:element name="description" type="xsd:string"/>
-                    <xsd:element name="bio" type="xsd:string"/>
-                    <xsd:element name="personality" type="xsd:string"/>
-                    <xsd:element name="motive" type="xsd:string"/>
+                    <xsd:element name="name" type="xsd:string" />
+                    <xsd:element name="description" type="xsd:string" />
+                    <xsd:element name="bio" type="xsd:string" />
+                    <xsd:element name="personality" type="xsd:string" />
+                    <xsd:element name="motive" type="xsd:string" />
                   </xsd:sequence>
                 </xsd:complexType>
               </xsd:element>
             </xsd:sequence>
           </xsd:complexType>
         </xsd:element>
-        <xsd:element name="compressedCharacters" type="xsd:string" minOccurs="0"/>
-        <xsd:element name="blurb" type="xsd:string" minOccurs="0"/>
-        <xsd:element name="coverArt" type="xsd:string" minOccurs="0"/>
+        <xsd:element name="compressedCharacters" type="xsd:string" minOccurs="0" />
+        <xsd:element name="blurb" type="xsd:string" minOccurs="0" />
+        <xsd:element name="coverArt" type="xsd:string" minOccurs="0" />
         <xsd:element name="chapters" minOccurs="0">
           <xsd:complexType>
             <xsd:sequence>
               <xsd:element name="moments" minOccurs="0">
                 <xsd:complexType>
                   <xsd:sequence>
-                    <xsd:element name="prose" type="xsd:string" minOccurs="0"/>
+                    <xsd:element name="prose" type="xsd:string" minOccurs="0" />
                   </xsd:sequence>
                 </xsd:complexType>
               </xsd:element>
