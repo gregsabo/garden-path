@@ -20,36 +20,36 @@ import argparse
 from datetime import datetime
 from dotenv import load_dotenv
 import openai
+from string import Template
 from openai_wrapper import gpt4
 
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 
-def work(tree):
+def work(novel):
     """
     Does one step of work on the novel then returns
     True if the novel is complete, False otherwise.
     """
-    novel = tree.getroot()
     # check if there is no title
-    if not tree.xpath(".//timestamp"):
+    if not novel.xpath(".//timestamp"):
         e = etree.Element("timestamp")
         e.text = str(datetime.now().isoformat())
         novel.append(e)
-    if not tree.xpath(".//title") or not tree.xpath(".//summary"):
+    if not novel.xpath(".//title") or not novel.xpath(".//summary"):
         title, summary = generate_concept()
         novel.append(title)
         novel.append(summary)
         return False
-    # if not tree.xpath(".//characters"):
-    #     novel.append(generate_characters(novel))
-    #     return False
+    if not novel.xpath(".//characters"):
+        novel.append(generate_characters(novel))
+        return False
     return True
 
 
 def work_and_save(tree):
-    schema = load_schema()
+    schema = etree.XMLSchema(load_schema_xml())
     schema.assertValid(tree)
     is_done = False
     while not is_done:
@@ -60,8 +60,8 @@ def work_and_save(tree):
         title = title.lower().replace(" ", "_")
         timestamp = tree.xpath(".//timestamp")[0].text.strip()
         path = os.path.join("output", f"{title}_{timestamp}.xml")
-        with open(path, "wb") as file:
-            file.write(etree.tostring(tree, pretty_print=True))
+        with open(path, "w") as file:
+            file.write(encode_xml(tree))
 
 
 generate_concept_prompt = """
@@ -69,7 +69,8 @@ You are a renowned, award-winning novelist.
 Generate ten <ideas>.
 
 You MUST Structure your response as XML.
-You MUST escape any XML special characters.
+Do NOT use apersands (&) anywhere in your response.
+Do NOT add any commentary before or after the XML.
 Your output MUST validate against the following schema:
 
 <xs:element name="ideas">
@@ -102,15 +103,71 @@ def generate_concept():
     return last_idea.xpath(".//title")[0], last_idea.xpath(".//summary")[0]
 
 
+generate_characters_prompt = Template("""
+You are a renowned, award-winning novelist.
+Given a summary of the book, write a list of characters.
+
+What we know about the novel thus far:
+$novel
+
+You MUST Structure your response as XML.
+Do NOT use apersands (&) anywhere in your response.
+Do NOT add any commentary before or after the XML.
+Your output MUST validate against the following schema:
+$schema
+""")
+
+
 def generate_characters(novel):
-    pass
+    # extract the title and summary fields from the novel with xpath
+    summary = novel.xpath(".//summary")[0]
+    schema = render_subschema("characters")
+    prompt = generate_characters_prompt.substitute(
+        novel=encode_xml(summary),
+        schema=schema
+    )
+    return gpt4(prompt)
 
 
-def load_schema():
+def render_subschema(name):
+    schema = load_schema_xml()
+    # Find the "characters" element
+    found_subschema = schema.find(
+        f".//xsd:element[@name='{name}']",
+        namespaces={"xsd": "http://www.w3.org/2001/XMLSchema"},
+    )[0]
+
+    if found_subschema is not None:
+        out_str = encode_xml(found_subschema)
+        return out_str
+    else:
+        return "Element not found"
+
+
+SCHEMA = None
+
+
+def load_schema_xml():
+    global SCHEMA
+    if SCHEMA:
+        return SCHEMA
+
     with open("hierarch_schema.xsd", "r") as file:
-        xsd_tree = etree.XML(file.read())
-        return etree.XMLSchema(xsd_tree)
+        return etree.XML(file.read())
 
+
+def parse_xml(xml):
+    """
+    xml string -> etree element, according to my preferences.
+    """
+    return etree.fromstring(xml, etree.XMLParser(remove_blank_text=True))
+
+
+def encode_xml(xml):
+    """
+    etree element -> xml string, pretty printed.
+    """
+    return etree.tostring(xml, pretty_print=True).decode("utf-8")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate or resume a novel.")
@@ -123,9 +180,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
     if args.resume_path:
         with open(args.resume_path, "r") as file:
-            novel = etree.fromstring(file.read())
-            work_and_save(novel)
+            root = parse_xml(file.read())
+            work_and_save(root)
     else:
         root = etree.Element("novel")
-        tree = etree.ElementTree(root)
-        work_and_save(tree)
+        work_and_save(root)

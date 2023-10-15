@@ -12,5 +12,5 @@ boring, and self-contradictory.
 
 # TODO
 
-- [ ] Try pretty-printing saved XML files better
+- [x] Try pretty-printing saved XML files better
 - [ ] See if we can stream output
