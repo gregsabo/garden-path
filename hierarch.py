@@ -20,6 +20,7 @@ import argparse
 from datetime import datetime
 from dotenv import load_dotenv
 import openai
+from openai_wrapper import gpt4
 
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -38,11 +39,12 @@ def work(tree):
         novel.append(e)
     if not tree.xpath(".//title") or not tree.xpath(".//summary"):
         title, summary = generate_concept()
-        print(title)
-        print(summary)
         novel.append(title)
         novel.append(summary)
         return False
+    # if not tree.xpath(".//characters"):
+    #     novel.append(generate_characters(novel))
+    #     return False
     return True
 
 
@@ -64,12 +66,15 @@ def work_and_save(tree):
 
 generate_concept_prompt = """
 You are a renowned, award-winning novelist.
-Structure your response as XML.
 Generate ten <ideas>.
+
+You MUST Structure your response as XML.
+You MUST escape any XML special characters.
+Your output MUST validate against the following schema:
 
 <xs:element name="ideas">
 <xs:complexType>
-    <xs:sequence>
+  <xs:sequence>
     <xs:element name="idea" minOccurs="10" maxOccurs="10">
         <xs:complexType>
         <xs:sequence>
@@ -79,41 +84,27 @@ Generate ten <ideas>.
         </xs:sequence>
         </xs:complexType>
     </xs:element>
-    </xs:sequence>
+  </xs:sequence>
 </xs:complexType>
 </xs:element>
 
 Each <idea> should attempt to improve on the previous one.
 
-The <critique> is a 1-sentence rejection of the previous idea by the Nobel committee.
+The <critique> is a 1-sentence rejection of the previous
+idea by the Nobel committee.
 
 The committee HATES cliches."""
 
 
 def generate_concept():
-    response = openai.ChatCompletion.create(
-        model="gpt-4",
-        messages=[
-            {
-                "role": "system",
-                "content": generate_concept_prompt
-            },
-            {
-                "role": "user",
-                "content": ""
-            }
-        ],
-        temperature=1,
-        max_tokens=4000,
-        top_p=1,
-        frequency_penalty=0,
-        presence_penalty=2
-    )
-    text = response.choices[0].message.content
-    print(text)
+    text = gpt4(generate_concept_prompt)
     tree = etree.fromstring(text)
     last_idea = tree.xpath(".//idea[last()]")[0]
     return last_idea.xpath(".//title")[0], last_idea.xpath(".//summary")[0]
+
+
+def generate_characters(novel):
+    pass
 
 
 def load_schema():
@@ -123,8 +114,12 @@ def load_schema():
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Generate or resume a novel.')
-    parser.add_argument('--resume_path', type=str, help='Path to directory of existing concept and novel to resume')
+    parser = argparse.ArgumentParser(description="Generate or resume a novel.")
+    parser.add_argument(
+        "--resume_path",
+        type=str,
+        help="Path to directory of existing concept and novel to resume",
+    )
 
     args = parser.parse_args()
     if args.resume_path:
