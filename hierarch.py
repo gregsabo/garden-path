@@ -45,9 +45,9 @@ def work(novel):
     if not novel.xpath(".//title"):
         novel.append(generate_title(novel))
         return False
-    # if not novel.xpath(".//characters"):
-    #     novel.append(generate_characters(novel))
-    #     return False
+    if not novel.xpath(".//characters"):
+        novel.append(generate_characters(novel))
+        return False
     # if not novel.xpath(".//compressedCharacters"):
     #     novel.append(compress_characters(novel))
     #     return False
@@ -102,11 +102,10 @@ def generate_summary():
 generate_title_prompt = Template("""
 You are a renowned, award-winning novelist.
 Generate ten <ideas> for the title of your next novel.
+Keep your titles SHORT - no more than 5 words.
 
 The <critique> is a 1-sentence rejection of the title by a publisher.
-The publisher HATES long and clunky titles.
-It LOVES punchy, unique titles that are easy to remember.
-
+The publisher LOVES marketable titles.
 Take each <critique> and use it to form a better <idea>.
 
 What we know about the novel thus far:
@@ -140,30 +139,19 @@ def add_chain_of_critique_to_schema(xml_schema):
     return ideas_schema
 
 
-generate_characters_prompt = Template(
-    """
+generate_characters_prompt = Template("""
 You are a renowned, award-winning novelist.
-Given a summary of the book, write a list of characters.
+Write out 5 characters for your next novel.
 
 What we know about the novel thus far:
 $novel
-
-You MUST Structure your response as XML.
-Do NOT use apersands (&) anywhere in your response.
-Do NOT add any commentary before or after the XML.
-Your output MUST validate against the following schema:
-$schema
-"""
-)
+""")
 
 
 def generate_characters(novel):
-    summary = novel.xpath(".//summary")[0]
     schema = get_subschema("characters")
-    prompt = generate_characters_prompt.substitute(
-        novel=encode_xml(summary), schema=schema
-    )
-    return gpt4_xml(prompt)
+    prompt = generate_characters_prompt.substitute(novel=encode_xml(novel))
+    return gpt4_xml(xml_schema=schema, system_prompt=prompt)
 
 
 compress_characters_prompt = Template(
