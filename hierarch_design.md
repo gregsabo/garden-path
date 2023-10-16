@@ -25,6 +25,13 @@ The leaf notes should generate...
 - Generate three sub-titles and sub-titles.
 - Recurse until you hit 5 layers deep.
 
+<ideas>
+  <idea>
+    <novel/>
+    <critique/>
+  </idea>
+</idea>
+
 Hierarch: stack of critiques
 Hierarch: Table of Contents
 Hierarch: Chapter breakdown

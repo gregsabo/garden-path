@@ -21,7 +21,9 @@ from datetime import datetime
 from dotenv import load_dotenv
 import openai
 from string import Template
-from openai_wrapper import gpt4
+
+from openai_wrapper import gpt4_xml
+from pretty_xml import parse_xml, encode_xml
 
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -37,14 +39,15 @@ def work(novel):
         e = etree.Element("timestamp")
         e.text = str(datetime.now().isoformat())
         novel.append(e)
-    if not novel.xpath(".//title") or not novel.xpath(".//summary"):
-        title, summary = generate_concept()
-        novel.append(title)
-        novel.append(summary)
+    if not novel.xpath(".//summary"):
+        novel.append(generate_summary())
         return False
-    if not novel.xpath(".//characters"):
-        novel.append(generate_characters(novel))
-        return False
+    # if not novel.xpath(".//characters"):
+    #     novel.append(generate_characters(novel))
+    #     return False
+    # if not novel.xpath(".//compressedCharacters"):
+    #     novel.append(compress_characters(novel))
+    #     return False
     return True
 
 
@@ -55,7 +58,14 @@ def work_and_save(tree):
     while not is_done:
         is_done = work(tree)
         schema.assertValid(tree)
-        title = tree.xpath(".//title")[0].text.strip()
+
+        title_elements = tree.xpath(".//title")
+        if len(title_elements) == 0:
+            print("Skipping saving, no title yet.")
+            print(encode_xml(tree))
+            return
+
+        title = title_elements[0].text.strip()
         # lowercase and replace whitespace with underscores
         title = title.lower().replace(" ", "_")
         timestamp = tree.xpath(".//timestamp")[0].text.strip()
@@ -64,46 +74,41 @@ def work_and_save(tree):
             file.write(encode_xml(tree))
 
 
-generate_concept_prompt = """
+generate_summary_prompt = """
 You are a renowned, award-winning novelist.
-Generate ten <ideas>.
-
-You MUST Structure your response as XML.
-Do NOT use apersands (&) anywhere in your response.
-Do NOT add any commentary before or after the XML.
-Your output MUST validate against the following schema:
-
-<xs:element name="ideas">
-<xs:complexType>
-  <xs:sequence>
-    <xs:element name="idea" minOccurs="10" maxOccurs="10">
-        <xs:complexType>
-        <xs:sequence>
-            <xs:element name="critique" type="xs:string"/>
-            <xs:element name="title" type="xs:string"/>
-            <xs:element name="summary" type="xs:string"/>
-        </xs:sequence>
-        </xs:complexType>
-    </xs:element>
-  </xs:sequence>
-</xs:complexType>
-</xs:element>
-
-Each <idea> should attempt to improve on the previous one.
-
-The <critique> is a 1-sentence rejection of the previous
-idea by the Nobel committee.
-
-The committee HATES cliches."""
+Generate ten <ideas> for your next novel.
+Each idea should have a one-sentence summary.
+"""
 
 
-def generate_concept():
-    tree = gpt4(generate_concept_prompt)
-    last_idea = tree.xpath(".//idea[last()]")[0]
-    return last_idea.xpath(".//title")[0], last_idea.xpath(".//summary")[0]
+def generate_summary():
+    schema = add_chain_of_critique_to_schema(get_subschema("summary"))
+    response = gpt4_xml(xml_schema=schema, system_prompt=generate_summary_prompt)
+
+    last_idea = response.xpath(".//idea")[-1]
+    # get the summary from the last idea
+    summary = last_idea.xpath(".//summary")[0]
+    return summary
 
 
-generate_characters_prompt = Template("""
+def add_chain_of_critique_to_schema(xml_schema):
+    """
+    Adds a chain of critique to the schema.
+    """
+    # load the hierarch_ideas_schema.xml
+    ideas_schema = etree.parse("hierarch_ideas_schema.xml")
+
+    # insert the xml_schema element in place of the first element where name=content
+    content_element = ideas_schema.find(
+        ".//xsd:element[@name='content']",
+        namespaces={"xsd": "http://www.w3.org/2001/XMLSchema"},
+    )
+    content_element.getparent().replace(content_element, xml_schema)
+    return ideas_schema
+
+
+generate_characters_prompt = Template(
+    """
 You are a renowned, award-winning novelist.
 Given a summary of the book, write a list of characters.
 
@@ -115,33 +120,41 @@ Do NOT use apersands (&) anywhere in your response.
 Do NOT add any commentary before or after the XML.
 Your output MUST validate against the following schema:
 $schema
-""")
+"""
+)
 
 
 def generate_characters(novel):
-    # extract the title and summary fields from the novel with xpath
     summary = novel.xpath(".//summary")[0]
-    schema = render_subschema("characters")
+    schema = get_subschema("characters")
     prompt = generate_characters_prompt.substitute(
-        novel=encode_xml(summary),
-        schema=schema
+        novel=encode_xml(summary), schema=schema
     )
-    return gpt4(prompt)
+    return gpt4_xml(prompt)
 
 
-def render_subschema(name):
+compress_characters_prompt = Template(
+    """
+"""
+)
+
+
+def compress_characters(novel):
+    characters = novel.xpath(".//characters")[0]
+    schema = get_subschema("compressedCharacters")
+    prompt = compress_characters_prompt.substitute(
+        novel=encode_xml(characters), schema=schema
+    )
+    return gpt4_xml(prompt)
+
+
+def get_subschema(name):
     schema = load_schema_xml()
-    # Find the "characters" element
     found_subschema = schema.find(
         f".//xsd:element[@name='{name}']",
         namespaces={"xsd": "http://www.w3.org/2001/XMLSchema"},
-    )[0]
-
-    if found_subschema is not None:
-        out_str = encode_xml(found_subschema)
-        return out_str
-    else:
-        return "Element not found"
+    )
+    return found_subschema
 
 
 SCHEMA = None
@@ -153,21 +166,8 @@ def load_schema_xml():
         return SCHEMA
 
     with open("hierarch_schema.xsd", "r") as file:
-        return etree.XML(file.read())
+        return parse_xml(file.read())
 
-
-def parse_xml(xml):
-    """
-    xml string -> etree element, according to my preferences.
-    """
-    return etree.fromstring(xml, etree.XMLParser(remove_blank_text=True))
-
-
-def encode_xml(xml):
-    """
-    etree element -> xml string, pretty printed.
-    """
-    return etree.tostring(xml, pretty_print=True).decode("utf-8")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate or resume a novel.")

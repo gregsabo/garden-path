@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+    <xs:element name="ideas">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="idea" maxOccurs="unbounded">
+                    <xs:complexType>
+                        <xs:all>
+                            <xs:element name="content" type="xs:string" />
+                            <xs:element name="critique" type="xs:string">
+                                <xs:annotation>
+                                    <xs:documentation>
+                                        A rejection of the idea by the Nobel committee.
+                                        The committee HATES cliche.
+                                        It's looking for the best piece of literature of the year.
+                                    </xs:documentation>
+                                </xs:annotation>
+                            </xs:element>
+                        </xs:all>
+                    </xs:complexType>
+                </xs:element>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+</xs:schema>
