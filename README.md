@@ -13,7 +13,7 @@ boring, and self-contradictory.
 # TODO
 
 - [x] Try pretty-printing saved XML files better
-- [ ] Compress characters
+- [x] Compress characters
 - [ ] Generate 20 chapters
 - [ ] Generate 20 moments for each chapter
 - [ ] Generate prose for each moment

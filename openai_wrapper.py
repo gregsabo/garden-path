@@ -2,6 +2,7 @@ import os
 from dotenv import load_dotenv
 import lxml.etree as etree
 import openai
+import time
 
 from pretty_xml import parse_xml, encode_xml
 
@@ -9,7 +10,7 @@ load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 
-def gpt4(system_prompt, user_prompt=None):
+def gpt4(system_prompt, user_prompt=None, retries=5):
     """
     Hits GPT-4, parameteres intended for
     creativity.
@@ -21,24 +22,30 @@ def gpt4(system_prompt, user_prompt=None):
         print("-- user --")
         print(user_prompt)
     print("." * 80)
-    response = openai.ChatCompletion.create(
-        model="gpt-4",
-        messages=[
-            {
-                "role": "system",
-                "content": system_prompt
-            },
-            {
-                "role": "user",
-                "content": user_prompt or ""
-            }
-        ],
-        temperature=1,
-        max_tokens=6000,
-        top_p=1,
-        frequency_penalty=0,
-        presence_penalty=2
-    )
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-4",
+            messages=[
+                {
+                    "role": "system",
+                    "content": system_prompt
+                },
+                {
+                    "role": "user",
+                    "content": user_prompt or ""
+                }
+            ],
+            temperature=1,
+            max_tokens=6000,
+            top_p=1,
+            frequency_penalty=0,
+            presence_penalty=2
+        )
+    except openai.error.RateLimitError as e:
+        print(e)
+        print("Rate limit error, sleeping for 60 seconds.")
+        time.sleep(60)
+        return gpt4(system_prompt, user_prompt, retries=retries - 1)
     text = response.choices[0].message.content
     print(text)
     return text

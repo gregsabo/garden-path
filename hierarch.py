@@ -22,7 +22,7 @@ from dotenv import load_dotenv
 import openai
 from string import Template
 
-from openai_wrapper import gpt4_xml
+from openai_wrapper import gpt4_xml, gpt4
 from pretty_xml import parse_xml, encode_xml
 
 load_dotenv()
@@ -45,12 +45,15 @@ def work(novel):
     if not novel.xpath(".//title"):
         novel.append(generate_title(novel))
         return False
+    if not novel.xpath(".//setting"):
+        novel.append(generate_setting(novel))
+        return False
     if not novel.xpath(".//characters"):
         novel.append(generate_characters(novel))
         return False
-    # if not novel.xpath(".//compressedCharacters"):
-    #     novel.append(compress_characters(novel))
-    #     return False
+    if not novel.xpath(".//compressedCharacters"):
+        novel.append(compress_characters(novel))
+        return False
     return True
 
 
@@ -139,6 +142,21 @@ def add_chain_of_critique_to_schema(xml_schema):
     return ideas_schema
 
 
+generate_setting_prompt = Template("""
+You are a renowned, award-winning novelist.
+Write the setting of the novel as 1 sentence.
+
+What we know about the novel thus far:
+$novel
+""")
+
+
+def generate_setting(novel):
+    schema = get_subschema("setting")
+    prompt = generate_setting_prompt.substitute(novel=encode_xml(novel))
+    return gpt4_xml(xml_schema=schema, system_prompt=prompt)
+
+
 generate_characters_prompt = Template("""
 You are a renowned, award-winning novelist.
 Write out 5 characters for your next novel.
@@ -154,19 +172,25 @@ def generate_characters(novel):
     return gpt4_xml(xml_schema=schema, system_prompt=prompt)
 
 
-compress_characters_prompt = Template(
-    """
+compress_characters_prompt = """
+Compress the User's message as much as possible.
+It doesn't have to be legible to humans,
+as long as you can understand the gist of it.
+
+You MUST NOT use ANY of the following
+characters in your output: < > ( ) & , ' "
 """
-)
 
 
 def compress_characters(novel):
-    characters = novel.xpath(".//characters")[0]
-    schema = get_subschema("compressedCharacters")
-    prompt = compress_characters_prompt.substitute(
-        novel=encode_xml(characters), schema=schema
+    characters_text = encode_xml(novel.xpath(".//characters")[0])
+    compressed = gpt4(
+        system_prompt=compress_characters_prompt,
+        user_prompt=characters_text
     )
-    return gpt4_xml(prompt)
+    element = etree.Element("compressedCharacters")
+    element.text = compressed
+    return element
 
 
 def get_subschema(name):
