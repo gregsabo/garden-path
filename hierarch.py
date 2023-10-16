@@ -42,6 +42,9 @@ def work(novel):
     if not novel.xpath(".//summary"):
         novel.append(generate_summary())
         return False
+    if not novel.xpath(".//title"):
+        novel.append(generate_title(novel))
+        return False
     # if not novel.xpath(".//characters"):
     #     novel.append(generate_characters(novel))
     #     return False
@@ -63,21 +66,27 @@ def work_and_save(tree):
         if len(title_elements) == 0:
             print("Skipping saving, no title yet.")
             print(encode_xml(tree))
-            return
+        else:
 
-        title = title_elements[0].text.strip()
-        # lowercase and replace whitespace with underscores
-        title = title.lower().replace(" ", "_")
-        timestamp = tree.xpath(".//timestamp")[0].text.strip()
-        path = os.path.join("output", f"{title}_{timestamp}.xml")
-        with open(path, "w") as file:
-            file.write(encode_xml(tree))
+            title = title_elements[0].text.strip()
+            timestamp = tree.xpath(".//timestamp")[0].text.strip()
+            # replace any non alphanumeric characters with _
+            filename = f"{title}_{timestamp}"
+            filename = "".join(
+                [c if c.isalnum() else "_" for c in filename]
+            )
+            path = os.path.join("output", f"{filename}.xml")
+            with open(path, "w") as file:
+                file.write(encode_xml(tree))
 
 
 generate_summary_prompt = """
 You are a renowned, award-winning novelist.
-Generate ten <ideas> for your next novel.
-Each idea should have a one-sentence summary.
+Generate ten <ideas>.
+
+The <critique> is a 1-sentence rejection of the previous idea by the Nobel committee.
+The committee HATES cliches.
+Take each critique, and use it to form a better <idea>.
 """
 
 
@@ -86,9 +95,33 @@ def generate_summary():
     response = gpt4_xml(xml_schema=schema, system_prompt=generate_summary_prompt)
 
     last_idea = response.xpath(".//idea")[-1]
-    # get the summary from the last idea
     summary = last_idea.xpath(".//summary")[0]
     return summary
+
+
+generate_title_prompt = Template("""
+You are a renowned, award-winning novelist.
+Generate ten <ideas> for the title of your next novel.
+
+The <critique> is a 1-sentence rejection of the title by a publisher.
+The publisher HATES long and clunky titles.
+It LOVES punchy, unique titles that are easy to remember.
+
+Take each <critique> and use it to form a better <idea>.
+
+What we know about the novel thus far:
+$novel
+""")
+
+
+def generate_title(novel):
+    schema = add_chain_of_critique_to_schema(get_subschema("title"))
+    prompt = generate_title_prompt.substitute(novel=encode_xml(novel))
+    response = gpt4_xml(xml_schema=schema, system_prompt=prompt)
+
+    last_idea = response.xpath(".//idea")[-1]
+    title = last_idea.xpath(".//title")[0]
+    return title
 
 
 def add_chain_of_critique_to_schema(xml_schema):
