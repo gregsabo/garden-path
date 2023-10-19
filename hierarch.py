@@ -79,6 +79,8 @@ def work_and_save(tree):
                 [c if c.isalnum() else "_" for c in filename]
             )
             path = os.path.join("output", f"{filename}.xml")
+            # handle the case where the directory doesn't exist yet
+            os.makedirs(os.path.dirname(path), exist_ok=True)
             with open(path, "w") as file:
                 file.write(encode_xml(tree))
 
