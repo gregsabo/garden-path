@@ -21,6 +21,7 @@ from datetime import datetime
 from dotenv import load_dotenv
 import openai
 from string import Template
+from copy import deepcopy
 
 from openai_wrapper import gpt4_xml, gpt4
 from pretty_xml import parse_xml, encode_xml
@@ -54,6 +55,8 @@ def work(novel):
     if not novel.xpath(".//compressedCharacters"):
         novel.append(compress_characters(novel))
         return False
+    if not novel.xpath(".//chapters"):
+        novel.append(generate_chapters(novel))
     return True
 
 
@@ -70,14 +73,11 @@ def work_and_save(tree):
             print("Skipping saving, no title yet.")
             print(encode_xml(tree))
         else:
-
             title = title_elements[0].text.strip()
             timestamp = tree.xpath(".//timestamp")[0].text.strip()
             # replace any non alphanumeric characters with _
             filename = f"{title}_{timestamp}"
-            filename = "".join(
-                [c if c.isalnum() else "_" for c in filename]
-            )
+            filename = "".join([c if c.isalnum() else "_" for c in filename])
             path = os.path.join("output", f"{filename}.xml")
             # handle the case where the directory doesn't exist yet
             os.makedirs(os.path.dirname(path), exist_ok=True)
@@ -104,7 +104,8 @@ def generate_summary():
     return summary
 
 
-generate_title_prompt = Template("""
+generate_title_prompt = Template(
+    """
 You are a renowned, award-winning novelist.
 Generate ten <ideas> for the title of your next novel.
 Keep your titles SHORT - no more than 5 words.
@@ -115,7 +116,8 @@ Take each <critique> and use it to form a better <idea>.
 
 What we know about the novel thus far:
 $novel
-""")
+"""
+)
 
 
 def generate_title(novel):
@@ -144,13 +146,15 @@ def add_chain_of_critique_to_schema(xml_schema):
     return ideas_schema
 
 
-generate_setting_prompt = Template("""
+generate_setting_prompt = Template(
+    """
 You are a renowned, award-winning novelist.
 Write the setting of the novel as 1 sentence.
 
 What we know about the novel thus far:
 $novel
-""")
+"""
+)
 
 
 def generate_setting(novel):
@@ -159,13 +163,15 @@ def generate_setting(novel):
     return gpt4_xml(xml_schema=schema, system_prompt=prompt)
 
 
-generate_characters_prompt = Template("""
+generate_characters_prompt = Template(
+    """
 You are a renowned, award-winning novelist.
 Write out 5 characters for your next novel.
 
 What we know about the novel thus far:
 $novel
-""")
+"""
+)
 
 
 def generate_characters(novel):
@@ -187,12 +193,43 @@ characters in your output: < > ( ) & , ' "
 def compress_characters(novel):
     characters_text = encode_xml(novel.xpath(".//characters")[0])
     compressed = gpt4(
-        system_prompt=compress_characters_prompt,
-        user_prompt=characters_text
+        system_prompt=compress_characters_prompt, user_prompt=characters_text
     )
     element = etree.Element("compressedCharacters")
     element.text = compressed
     return element
+
+
+def generate_chapters(novel):
+    novel = deepcopy(novel)
+    # remove <characters> from the novel
+    characters = novel.xpath(".//characters")[0]
+    novel.remove(characters)
+    prompt = Template(
+        """
+You are a renowned, award-winning novelist.
+Given a <summary> of the book, write 20 <chapter>s,
+each with a <name>, <beginning>, and <ending>.
+<beginning> must be a 1 -sentence summary of the state
+of the plot at the start of the chapter.
+<ending> must be a 1-sentence summary of the state
+of the plot at the end of the chapter.
+
+What we know about the novel thus far:
+$novel
+"""
+    )
+    chapters_schema = get_subschema("chapters")
+    # delete "moments" from the schema
+    moments = chapters_schema.find(
+        ".//xsd:element[@name='moments']",
+        namespaces={"xsd": "http://www.w3.org/2001/XMLSchema"},
+    )
+    moments.getparent().remove(moments)
+    return gpt4_xml(
+        xml_schema=chapters_schema,
+        system_prompt=prompt.substitute(novel=encode_xml(novel)),
+    )
 
 
 def get_subschema(name):
@@ -208,9 +245,9 @@ SCHEMA = None
 
 
 def load_schema_xml():
-    global SCHEMA
-    if SCHEMA:
-        return SCHEMA
+    # global SCHEMA
+    # if SCHEMA:
+    #     return SCHEMA
 
     with open("hierarch_schema.xsd", "r") as file:
         return parse_xml(file.read())

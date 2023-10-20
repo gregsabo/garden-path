@@ -29,16 +29,33 @@
         <xsd:element name="chapters" minOccurs="0">
           <xsd:complexType>
             <xsd:sequence>
-              <xsd:element name="moments" minOccurs="0">
+              <xsd:element name="chapter" minOccurs="0" maxOccurs="unbounded">
                 <xsd:complexType>
                   <xsd:sequence>
-                    <xsd:element name="prose" type="xsd:string" minOccurs="0" />
+                    <xsd:element name="name" type="xsd:string" minOccurs="1" />
+                    <xsd:element name="number" type="xsd:int" minOccurs="1" />
+                    <xsd:element name="beginning" type="xsd:string" minOccurs="1" />
+                    <xsd:element name="ending" type="xsd:string" minOccurs="1" />
+                    <xsd:element name="moments" minOccurs="0">
+                      <xsd:complexType>
+                        <xsd:sequence>
+                          <xsd:element name="moment" minOccurs="0" maxOccurs="unbounded">
+                            <xsd:complexType>
+                              <xsd:sequence>
+                                <xsd:element name="prose" type="xsd:string" minOccurs="0" />
+                              </xsd:sequence>
+                            </xsd:complexType>
+                          </xsd:element>
+                        </xsd:sequence>
+                      </xsd:complexType>
+                    </xsd:element>
                   </xsd:sequence>
                 </xsd:complexType>
               </xsd:element>
             </xsd:sequence>
           </xsd:complexType>
         </xsd:element>
+
       </xsd:sequence>
     </xsd:complexType>
   </xsd:element>

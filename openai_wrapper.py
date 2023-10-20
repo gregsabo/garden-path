@@ -26,20 +26,14 @@ def gpt4(system_prompt, user_prompt=None, retries=5):
         response = openai.ChatCompletion.create(
             model="gpt-4",
             messages=[
-                {
-                    "role": "system",
-                    "content": system_prompt
-                },
-                {
-                    "role": "user",
-                    "content": user_prompt or ""
-                }
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt or ""},
             ],
             temperature=1,
             max_tokens=6000,
             top_p=1,
             frequency_penalty=0,
-            presence_penalty=2
+            presence_penalty=2,
         )
     except openai.error.RateLimitError as e:
         print(e)
@@ -70,6 +64,9 @@ def gpt4_xml(xml_schema, system_prompt, user_prompt=None):
     prompt_with_xml = system_prompt + xml_schema_prompt_suffix + schema_string
 
     text = gpt4(prompt_with_xml, user_prompt)
+
+    # replace "&" with "and"
+    text = text.replace("&", "and")
 
     parsed = parse_xml(text)
     # TODO: figure out how to validate this against xml_schema
