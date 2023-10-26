@@ -32,10 +32,10 @@
               <xsd:element name="chapter" minOccurs="0" maxOccurs="unbounded">
                 <xsd:complexType>
                   <xsd:sequence>
-                    <xsd:element name="name" type="xsd:string" minOccurs="1" />
-                    <xsd:element name="number" type="xsd:int" minOccurs="1" />
-                    <xsd:element name="beginning" type="xsd:string" minOccurs="1" />
-                    <xsd:element name="ending" type="xsd:string" minOccurs="1" />
+                    <xsd:element name="chapterName" type="xsd:string" minOccurs="1" />
+                    <xsd:element name="chapterNumber" type="xsd:int" minOccurs="1" />
+                    <xsd:element name="chapterBeginning" type="xsd:string" minOccurs="1" />
+                    <xsd:element name="chapterEnding" type="xsd:string" minOccurs="1" />
                     <xsd:element name="moments" minOccurs="0">
                       <xsd:complexType>
                         <xsd:sequence>
