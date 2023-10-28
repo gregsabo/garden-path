@@ -18,6 +18,7 @@ boring, and self-contradictory.
 - [x] Generate 20 moments for each chapter
 - [x] Figure out why resuming doesn't seem to work
 - [x] Remove <prose> from schema when generating moments
-- [ ] Figure out why chapters are dissapearing
+- [x] Figure out why chapters are dissapearing
+- [ ] Include some previous moments
 - [ ] Generate prose for each moment
 - [ ] See if we can stream output

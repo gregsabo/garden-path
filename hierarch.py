@@ -241,6 +241,7 @@ $novel
 
 def generate_moments(novel, chapter):
     novel = deepcopy(novel)
+    chapter = deepcopy(chapter)
     # create slim_novel, empty except for <summary>, <setting>, <compressedCharacters>
     slim_novel = etree.Element("novel")
     slim_novel.append(novel.xpath(".//summary")[0])
