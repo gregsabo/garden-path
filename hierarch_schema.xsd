@@ -36,7 +36,7 @@
                     <xsd:element name="chapterNumber" type="xsd:int" minOccurs="1" />
                     <xsd:element name="chapterBeginning" type="xsd:string" minOccurs="1" />
                     <xsd:element name="chapterEnding" type="xsd:string" minOccurs="1" />
-                    <xsd:element name="chapterSetting" type="xsd:string" minOccurs="1" />
+                    <xsd:element name="chapterSettingLocations" type="xsd:string" minOccurs="1" />
                     <xsd:element name="moments" minOccurs="0">
                       <xsd:complexType>
                         <xsd:sequence>

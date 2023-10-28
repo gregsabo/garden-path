@@ -240,20 +240,39 @@ $novel
 
 
 def generate_moments(novel, chapter):
+    # Get the previous 2 chapters and next 2 chapters from the novel
+    # XPath is 1-indexed
+    chapter_index = novel.xpath(".//chapter").index(chapter) + 1
+    surrounding_chapters = novel.xpath(
+        f".//chapter[position() >= {chapter_index - 1} and position() <= {chapter_index + 1}]"
+    )
+
+    chapter_number = chapter.xpath(".//chapterNumber")[0].text
+
+    surrounding_chapters = deepcopy(surrounding_chapters)
+    # find the chapter in the surrounding_chapters and rename it to currentChapter
+    for i, surrounding_chapter in enumerate(surrounding_chapters):
+        if surrounding_chapter.xpath(".//chapterNumber")[0].text == chapter_number:
+            surrounding_chapters[i].tag = "currentChapter"
+            break
+
     novel = deepcopy(novel)
     chapter = deepcopy(chapter)
+
     # create slim_novel, empty except for <summary>, <setting>, <compressedCharacters>
     slim_novel = etree.Element("novel")
     slim_novel.append(novel.xpath(".//summary")[0])
     slim_novel.append(novel.xpath(".//setting")[0])
     slim_novel.append(novel.xpath(".//compressedCharacters")[0])
-    slim_novel.append(chapter)
+    # add each surrounding chapter to the novel
+    for surrounding_chapter in surrounding_chapters:
+        slim_novel.append(surrounding_chapter)
     prompt = Template(
         """
 You are a renowned, award-winning novelist.
 
-Given a summary of the book and this current chapter,
-break the chapter into 20 <moments>.
+Given a summary of the book and <currentChapter>,
+break the <currentChapter> into 20 <moments>.
 
 What we know about the novel thus far:
 $novel
