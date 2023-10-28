@@ -14,7 +14,9 @@ boring, and self-contradictory.
 
 - [x] Try pretty-printing saved XML files better
 - [x] Compress characters
-- [ ] Generate 20 chapters
-- [ ] Generate 20 moments for each chapter
+- [x] Generate 20 chapters
+- [x] Generate 20 moments for each chapter
+- [ ] Figure out why resuming doesn't seem to work
+- [ ] Remove <prose> from schema when generating moments
 - [ ] Generate prose for each moment
 - [ ] See if we can stream output

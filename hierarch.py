@@ -57,6 +57,13 @@ def work(novel):
         return False
     if not novel.xpath(".//chapters"):
         novel.append(generate_chapters(novel))
+        return False
+    # Iterate over each <chapter> element
+    for chapter in novel.xpath(".//chapter"):
+        # check if there is no <moments> element
+        if not chapter.xpath(".//moments"):
+            chapter.append(generate_moments(novel, chapter))
+            return False
     return True
 
 
@@ -229,6 +236,31 @@ $novel
     return gpt4_xml(
         xml_schema=chapters_schema,
         system_prompt=prompt.substitute(novel=encode_xml(novel)),
+    )
+
+
+def generate_moments(novel, chapter):
+    novel = deepcopy(novel)
+    # create slim_novel, empty except for <summary>, <setting>, <compressedCharacters>
+    slim_novel = etree.Element("novel")
+    slim_novel.append(novel.xpath(".//summary")[0])
+    slim_novel.append(novel.xpath(".//setting")[0])
+    slim_novel.append(novel.xpath(".//compressedCharacters")[0])
+    slim_novel.append(chapter)
+    prompt = Template(
+        """
+You are a renowned, award-winning novelist.
+
+Given a summary of the book and this current chapter,
+break the chapter into 20 <moments>.
+
+What we know about the novel thus far:
+$novel
+    """
+    )
+    return gpt4_xml(
+        xml_schema=get_subschema("moments"),
+        system_prompt=prompt.substitute(novel=encode_xml(slim_novel)),
     )
 
 
