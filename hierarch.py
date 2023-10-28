@@ -258,8 +258,16 @@ What we know about the novel thus far:
 $novel
     """
     )
+    moments_schema = get_subschema("moments")
+    # remove <prose> element from schema
+    prose = moments_schema.find(
+        ".//xsd:element[@name='prose']",
+        namespaces={"xsd": "http://www.w3.org/2001/XMLSchema"},
+    )
+    prose.getparent().remove(prose)
+
     return gpt4_xml(
-        xml_schema=get_subschema("moments"),
+        xml_schema=moments_schema,
         system_prompt=prompt.substitute(novel=encode_xml(slim_novel)),
     )
 

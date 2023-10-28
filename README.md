@@ -16,7 +16,8 @@ boring, and self-contradictory.
 - [x] Compress characters
 - [x] Generate 20 chapters
 - [x] Generate 20 moments for each chapter
-- [ ] Figure out why resuming doesn't seem to work
-- [ ] Remove <prose> from schema when generating moments
+- [x] Figure out why resuming doesn't seem to work
+- [x] Remove <prose> from schema when generating moments
+- [ ] Figure out why chapters are dissapearing
 - [ ] Generate prose for each moment
 - [ ] See if we can stream output
