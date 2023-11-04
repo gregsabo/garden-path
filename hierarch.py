@@ -68,6 +68,7 @@ def work(novel):
         # check if there is no <prose> element
         if not moment.xpath(".//prose"):
             moment.append(generate_prose(novel, moment))
+            return False
     return True
 
 
@@ -328,15 +329,20 @@ def generate_prose(novel, moment):
         """
 You are an award-winning novelist.
 
-Given a summary of the book and <currentMoment>,
-write the prose for the given moment.
-The minimum word count is 300 words.
-
-What we know about the novel thus far:
+What we know about your novel thus far:
 $novel
+
+Take a deep breath.
+Given the summary above,
+write the prose for <currentMoment>.
+Do NOT spoil any of the events of subsequent <moments>.
+The minimum word count is 300 words.
 """
     )
-    return gpt4(system_prompt=prompt.substitute(novel=encode_xml(slim_novel)))
+    return gpt4_xml(
+        xml_schema=get_subschema("prose"),
+        system_prompt=prompt.substitute(novel=encode_xml(slim_novel)),
+    )
 
 
 def get_subschema(name):
