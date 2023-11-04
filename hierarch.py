@@ -64,6 +64,11 @@ def work(novel):
         if not chapter.xpath(".//moments"):
             chapter.append(generate_moments(novel, chapter))
             return False
+    for moment in novel.xpath(".//moment"):
+        # check if there is no <prose> element
+        if not moment.xpath(".//prose"):
+            moment.append(generate_prose(novel, moment))
+            return False
     return True
 
 
@@ -222,6 +227,8 @@ of the plot at the start of the chapter.
 <ending> must be a 1-sentence summary of the state
 of the plot at the end of the chapter.
 
+You MUST include all 20 chapters in your output.
+
 What we know about the novel thus far:
 $novel
 """
@@ -288,6 +295,52 @@ $novel
 
     return gpt4_xml(
         xml_schema=moments_schema,
+        system_prompt=prompt.substitute(novel=encode_xml(slim_novel)),
+    )
+
+
+def generate_prose(novel, moment):
+    moment_index = novel.xpath(".//moment").index(moment)
+    novel = deepcopy(novel)
+    all_moments = deepcopy(novel.xpath(".//moment"))
+    all_moments[moment_index].tag = "currentMoment"
+
+    # Delete the <prose> element from every moment in all_moments
+    # except for the moment at moment_index -1, if it exists.
+    for i, moment in enumerate(all_moments):
+        if i != moment_index - 1:
+            prose_results = moment.xpath(".//prose")
+            if len(prose_results) == 0:
+                continue
+            else:
+                moment.remove(prose_results[0])
+
+    surrounding_moments = all_moments[max(0, moment_index - 10) : moment_index + 10]
+
+    # create slim_novel, empty except for <summary>, <setting>, <compressedCharacters>
+    slim_novel = etree.Element("novel")
+    slim_novel.append(novel.xpath(".//summary")[0])
+    slim_novel.append(novel.xpath(".//setting")[0])
+    slim_novel.append(novel.xpath(".//compressedCharacters")[0])
+    # add each surrounding moment to the novel
+    for moment in surrounding_moments:
+        slim_novel.append(moment)
+    prompt = Template(
+        """
+You are an award-winning novelist.
+
+What we know about your novel thus far:
+$novel
+
+Take a deep breath.
+Given the summary above,
+write the prose for <currentMoment>.
+Do NOT spoil any of the events of subsequent <moments>.
+The minimum word count is 300 words.
+"""
+    )
+    return gpt4_xml(
+        xml_schema=get_subschema("prose"),
         system_prompt=prompt.substitute(novel=encode_xml(slim_novel)),
     )
 
