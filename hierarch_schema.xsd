@@ -43,7 +43,7 @@
                           <xsd:element name="moment" minOccurs="0" maxOccurs="unbounded">
                             <xsd:complexType>
                               <xsd:sequence>
-                                <xsd:element name="summary" type="xsd:string" minOccurs="0" />
+                                <xsd:element name="momentSummary" type="xsd:string" minOccurs="0" />
                                 <xsd:element name="prose" type="xsd:string" minOccurs="0" />
                               </xsd:sequence>
                             </xsd:complexType>

@@ -19,7 +19,9 @@ boring, and self-contradictory.
 - [x] Figure out why resuming doesn't seem to work
 - [x] Remove <prose> from schema when generating moments
 - [x] Figure out why chapters are dissapearing
-- [ ] Generate cover and blurb
 - [x] Include some previous moments
-- [ ] Generate prose for each moment
+- [ ] Handle incomplete chapter generation.
+- [ ] Generate cover and blurb
+- [ ] Strip out prose except for previous
+- [x] Generate prose for each moment
 - [ ] See if we can stream output
