@@ -251,7 +251,7 @@ def generate_moments(novel, chapter):
     # XPath is 1-indexed
     chapter_index = novel.xpath(".//chapter").index(chapter) + 1
     surrounding_chapters = novel.xpath(
-        f".//chapter[position() >= {chapter_index - 1} and position() <= {chapter_index + 1}]"
+        f".//chapter[position() >= {chapter_index - 1} and position() <= {chapter_index + 3}]"
     )
 
     chapter_number = chapter.xpath(".//chapterNumber")[0].text
