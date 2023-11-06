@@ -49,6 +49,12 @@ def work(novel):
     if not novel.xpath(".//setting"):
         novel.append(generate_setting(novel))
         return False
+    if not novel.xpath(".//blurb"):
+        novel.append(generate_blurb(novel))
+        return False
+    if not novel.xpath(".//coverArt"):
+        novel.append(generate_cover_art(novel))
+        return False
     if not novel.xpath(".//characters"):
         novel.append(generate_characters(novel))
         return False
@@ -179,6 +185,50 @@ $novel
 def generate_setting(novel):
     schema = get_subschema("setting")
     prompt = generate_setting_prompt.substitute(novel=encode_xml(novel))
+    return gpt4_xml(xml_schema=schema, system_prompt=prompt)
+
+
+def generate_blurb(novel):
+    schema = get_subschema("blurb")
+    prompt = Template(
+        """
+You are a renowned, award-winning novelist.
+Write the blurb of the novel in a
+straightforward, factual style.
+
+Your response should be concise,
+devoid of metaphors or embellishments,
+and relay only the essential details of the plot.
+
+The word limit is 100 words.
+
+What we know about the novel thus far:
+$novel
+"""
+    ).substitute(novel=encode_xml(novel))
+    return gpt4_xml(xml_schema=schema, system_prompt=prompt)
+
+
+def generate_cover_art(novel):
+    schema = get_subschema("coverArt")
+    prompt = Template(
+        """
+You are a graphic designer.
+
+Describe the design of the cover art
+for the following novel.
+
+Include a high level summary
+and reference specific art styles
+or techniques you'd want the art
+to use.
+
+The word limit is 30 words.
+
+What we know about the novel thus far:
+$novel"""
+    ).substitute(novel=encode_xml(novel))
+
     return gpt4_xml(xml_schema=schema, system_prompt=prompt)
 
 
@@ -358,16 +408,23 @@ You are an award-winning novelist.
 What we know about your novel thus far:
 $novel
 
-Take a deep breath.
 Given the summary above,
 write the prose for <currentMoment>.
 
-Write at a 7th-grade reading level.
-Keep sentences short.
-Include dialog, action, or description.
+Focus on concrete actions and sensory details.
+Use short, simple sentences.
+Avoid exposition and backstory.
+Show, don't tell: depict the characters' actions,
+surroundings, and immediate experience.
+Do not include internal thoughts or feelings
+unless shown through action or dialogue.
+
+Limit each sentence to a maximum of 10 words.
+Use active voice and simple past tense verbs.
+Avoid adverbs and complex descriptive phrases.
 
 Do NOT spoil any of the events of subsequent <moments>.
-The minimum word count is 300 words.
+Aim for a word count of about 300 words.
 """
     )
     return gpt4_xml(
