@@ -53,7 +53,7 @@ Your output MUST validate against the following schema:
 """
 
 
-def gpt4_xml(xml_schema, system_prompt, user_prompt=None):
+def gpt4_xml(xml_schema, system_prompt, user_prompt=None, retries=5):
     """
     Given an xml_schema, hits GPT-4 and requires the response
     to be valid against the xml schema. Returns parsed XML.
@@ -68,7 +68,13 @@ def gpt4_xml(xml_schema, system_prompt, user_prompt=None):
     # replace "&" with "and"
     text = text.replace("&", "and")
 
-    parsed = parse_xml(text)
+    try:
+        parsed = parse_xml(text)
+    except etree.XMLSyntaxError:
+        parsed = gpt4_xml(xml_schema, system_prompt, user_prompt, retries=retries - 1)
+
+    # Catch lxml.etree.XMLSyntaxError
+
     # TODO: figure out how to validate this against xml_schema
 
     return parsed

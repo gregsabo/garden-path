@@ -161,7 +161,14 @@ def add_chain_of_critique_to_schema(xml_schema):
 generate_setting_prompt = Template(
     """
 You are a renowned, award-winning novelist.
-Write the setting of the novel as 1 sentence.
+Write the setting of the novel in a
+straightforward, factual style.
+
+Your response should be concise,
+devoid of metaphors or embellishments,
+and relay only the essential details of the setting.
+
+The word limit is 100 words.
 
 What we know about the novel thus far:
 $novel
@@ -196,6 +203,9 @@ compress_characters_prompt = """
 Compress the User's message as much as possible.
 It doesn't have to be legible to humans,
 as long as you can understand the gist of it.
+
+Include the full, uncompressed names of
+each of the characters, though.
 
 You MUST NOT use ANY of the following
 characters in your output: < > ( ) & , ' "
@@ -251,7 +261,7 @@ def generate_moments(novel, chapter):
     # XPath is 1-indexed
     chapter_index = novel.xpath(".//chapter").index(chapter) + 1
     surrounding_chapters = novel.xpath(
-        f".//chapter[position() >= {chapter_index - 1} and position() <= {chapter_index + 3}]"
+        f".//chapter[position() >= {chapter_index - 2} and position() <= {chapter_index + 3}]"
     )
 
     chapter_number = chapter.xpath(".//chapterNumber")[0].text
@@ -276,10 +286,25 @@ def generate_moments(novel, chapter):
         slim_novel.append(surrounding_chapter)
     prompt = Template(
         """
-You are a renowned, award-winning novelist.
+You are a distinguished novelist known for your compelling storytelling.
 
-Given a summary of the book and <currentChapter>,
-break the <currentChapter> into 20 <moments>.
+With the book summary and <currentChapter> in mind,
+divide the <currentChapter> into 20 <moments>.
+Each moment should encapsulate a real-time snapshot,
+representing a brief, continuous scene without large leaps in time.
+
+Describe actions and settings with direct and utilitarian language.
+Avoid metaphors, similes, and personification.
+Each sentence should be straightforward and factual,
+capturing the immediate action or detail.
+
+Aim for simplicity and conciseness in sentence structure
+to ensure readability and engagement.
+
+Keep sentences no longer than 10 words, literal, and to the point.
+Focus on tangible actions and observable details.
+Highlight character dynamics without interpretive language.
+Ensure dialogue is succinct and directly contributes to the moment.
 
 What we know about the novel thus far:
 $novel
@@ -308,12 +333,13 @@ def generate_prose(novel, moment):
     # Delete the <prose> element from every moment in all_moments
     # except for the moment at moment_index -1, if it exists.
     for i, moment in enumerate(all_moments):
-        if i != moment_index - 1:
-            prose_results = moment.xpath(".//prose")
-            if len(prose_results) == 0:
-                continue
-            else:
-                moment.remove(prose_results[0])
+        # Uncomment to include the previous moment's prose
+        # if i != moment_index - 1:
+        prose_results = moment.xpath(".//prose")
+        if len(prose_results) == 0:
+            continue
+        else:
+            moment.remove(prose_results[0])
 
     surrounding_moments = all_moments[max(0, moment_index - 10) : moment_index + 10]
 
@@ -335,6 +361,11 @@ $novel
 Take a deep breath.
 Given the summary above,
 write the prose for <currentMoment>.
+
+Write at a 7th-grade reading level.
+Keep sentences short.
+Include dialog, action, or description.
+
 Do NOT spoil any of the events of subsequent <moments>.
 The minimum word count is 300 words.
 """
