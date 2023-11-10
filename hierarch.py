@@ -460,6 +460,14 @@ def load_schema_xml():
         return parse_xml(file.read())
 
 
+def print_novel(novel):
+    for chapter in novel.xpath(".//chapter"):
+        title = chapter.xpath(".//chapterName")[0].text.strip()
+        print("\n#", title, "\n")
+        for prose in chapter.xpath(".//prose"):
+            print(prose.text.strip())
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate or resume a novel.")
     parser.add_argument(
@@ -468,11 +476,19 @@ if __name__ == "__main__":
         help="Path to directory of existing concept and novel to resume",
     )
 
+    parser.add_argument(
+        "--print", type=bool, help="Whether to print the novel output", default=False
+    )
+
     args = parser.parse_args()
+
     if args.resume_path:
         with open(args.resume_path, "r") as file:
             root = parse_xml(file.read())
-            work_and_save(root)
+            if args.print:
+                print_novel(root)
+            else:
+                work_and_save(root)
     else:
         root = etree.Element("novel")
         work_and_save(root)

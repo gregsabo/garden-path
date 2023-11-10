@@ -24,13 +24,13 @@ def gpt4(system_prompt, user_prompt=None, retries=5):
     print("." * 80)
     try:
         response = openai.ChatCompletion.create(
-            model="gpt-4",
+            model="gpt-4-1106-preview",
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt or ""},
             ],
             temperature=1,
-            max_tokens=6000,
+            max_tokens=4096,
             top_p=1,
             frequency_penalty=0,
             presence_penalty=2,
@@ -69,7 +69,7 @@ def gpt4_xml(xml_schema, system_prompt, user_prompt=None, retries=5):
     text = text.replace("&", "and")
 
     try:
-        parsed = parse_xml(text)
+        parsed = parse_xml(unwrap_markdown_block(text))
     except etree.XMLSyntaxError:
         parsed = gpt4_xml(xml_schema, system_prompt, user_prompt, retries=retries - 1)
 
@@ -78,3 +78,12 @@ def gpt4_xml(xml_schema, system_prompt, user_prompt=None, retries=5):
     # TODO: figure out how to validate this against xml_schema
 
     return parsed
+
+
+def unwrap_markdown_block(input_string):
+    # Check if the string starts and ends with triple backticks
+    if input_string.startswith("```xml") and input_string.endswith("```"):
+        # Remove the triple backticks and "xml" from the start
+        # and the triple backticks from the end
+        return input_string.replace("```xml\n", "", 1).rstrip("```").strip()
+    return input_string

@@ -17,12 +17,16 @@ load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 
-def main(resume_path = None):
+def main(resume_path=None):
     if resume_path:
-        dest, title, concept_description, characters, last_sentence = load_existing(resume_path)
+        dest, title, concept_description, characters, last_sentence = load_existing(
+            resume_path
+        )
     else:
         concept = generate_concept()
-        dest, title, concept_description, characters, last_sentence = parse_and_save(concept)
+        dest, title, concept_description, characters, last_sentence = parse_and_save(
+            concept
+        )
     generate_repeatedly(dest, title, concept_description, characters, last_sentence)
 
 
@@ -67,10 +71,7 @@ def generate_repeatedly(dest, title, concept_description, characters, last_sente
         print("-" * 80)
         print("Word count:", count_words(text))
         new_text = generate_more(
-            title,
-            concept_description,
-            characters,
-            final_sentence(text)
+            title, concept_description, characters, final_sentence(text)
         )
         new_text = trim_text(new_text)
         print(new_text)
@@ -80,10 +81,7 @@ def generate_repeatedly(dest, title, concept_description, characters, last_sente
         with open(file_path, "w") as file:
             file.write(text)
     new_text = generate_ending(
-        title,
-        concept_description,
-        characters,
-        final_sentence(text)
+        title, concept_description, characters, final_sentence(text)
     )
     print("Generated ending:")
     print(new_text)
@@ -102,10 +100,10 @@ def count_words(text):
 
 def trim_text(text):
     """Remove everything after the 5th final newline character."""
-    lines = text.split('\n')
+    lines = text.split("\n")
     if len(lines) <= 5:
         return text
-    return '\n'.join(lines[:-5])
+    return "\n".join(lines[:-5])
 
 
 def save_concept(concept):
@@ -139,13 +137,15 @@ DO proceed immediately with the text of the novel.
 Do NOT add any additional commentary before or after the text.
 Do NOT write any sentences longer than 10 words.
 Do NOT use adjectives or adverbs.
-DO include dialog."""
+DO include dialog.""",
                 },
-                {"role": "user", "content": f"""
+                {
+                    "role": "user",
+                    "content": f"""
 # Concept
 {concept}
 # Characters
-{characters} """
+{characters} """,
                 },
                 {"role": "user", "content": last_sentence},
             ],
@@ -162,6 +162,7 @@ DO include dialog."""
         else:
             raise e
 
+
 def generate_ending(title, concept, characters, last_sentence):
     try:
         response = openai.ChatCompletion.create(
@@ -175,13 +176,15 @@ The User will give you the previous sentence in the novel.
 DO proceed immediately with the text of the novel.
 Do NOT add any additional commentary before or after the text.
 Wrap up the story in a satisfying way.
-"""
+""",
                 },
-                {"role": "user", "content": f"""
+                {
+                    "role": "user",
+                    "content": f"""
 # Concept
 {concept}
 # Characters
-{characters} """
+{characters} """,
                 },
                 {"role": "user", "content": last_sentence},
             ],
@@ -201,11 +204,11 @@ Wrap up the story in a satisfying way.
 
 def final_sentence(text):
     """Return the final sentence of the text."""
-    sentences = text.strip().split('. ')
+    sentences = text.strip().split(". ")
     while sentences:
         last_sentence = sentences.pop().strip()
         if last_sentence:
-            return last_sentence + '.'
+            return last_sentence + "."
     print("Warning, no final sentence found. Returning last 500 chars instead.")
     return text[-500:]
 
@@ -246,10 +249,11 @@ DO make the genre dramatic literary fiction appropriate for a Pulitzer.""",
     return response.choices[0].message.content
 
 
-
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Generate or resume a novel.')
-    parser.add_argument('--resume_path', type=str, help='Path to directory of existing concept and novel to resume')
-
-    args = parser.parse_args()
+    parser = argparse.ArgumentParser(description="Generate or resume a novel.")
+    parser.add_argument(
+        "--resume_path",
+        type=str,
+        help="Path to directory of existing concept and novel to resume",
+    )
     main(args.resume_path)
